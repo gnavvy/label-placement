@@ -7,6 +7,8 @@ const NUM_POINTS = 100;
 const NUM_RAYS = 64;
 const DEGREE_TO_RADIAN = Math.PI / 180;
 const POINT_RADIUS = 15;
+const LABEL_WIDTH = 40;
+const LABEL_HEIGHT = 24;
 const RAY_STEP_SIZE = 5;
 
 function generateRandomPoints(n = NUM_POINTS) {
@@ -63,11 +65,12 @@ class Demo extends Component {
       const y = p.y * height;
       return (
         <g key={`point-${i}`}>
-          <circle
+          <rect
             key={`interact-${i}`}
-            cx={x}
-            cy={y}
-            r={POINT_RADIUS}
+            x={x - POINT_RADIUS}
+            y={y - POINT_RADIUS}
+            width={POINT_RADIUS * 2}
+            height={POINT_RADIUS * 2}
             fill={'white'}
             onMouseOver={() => this.handleHovering(p)}
             onMouseOut={() => this.handleHovering(null)}
@@ -80,16 +83,37 @@ class Demo extends Component {
             fill={isHovered ? 'red' : 'grey'}
             pointerEvents={'none'}
           />
-          <circle
+          <rect
             key={`radius-${i}`}
-            cx={x}
-            cy={y}
-            r={POINT_RADIUS}
+            x={x - POINT_RADIUS}
+            y={y - POINT_RADIUS}
+            width={POINT_RADIUS * 2}
+            height={POINT_RADIUS * 2}
             fill={'none'}
             stroke={'red'}
             strokeDasharray={isHovered ? '1, 0' : '2, 5'}
           />
         </g>
+      );
+    });
+  }
+
+  renderMasks() {
+    const {points, width, height} = this.state;
+    return points.map((p, i) => {
+      const x = p.x * width;
+      const y = p.y * height;
+      return (
+        <rect
+          key={`mask-${i}`}
+          x={x - POINT_RADIUS - LABEL_WIDTH}
+          y={y - POINT_RADIUS - LABEL_HEIGHT}
+          width={POINT_RADIUS * 2 + LABEL_WIDTH * 2}
+          height={POINT_RADIUS * 2 + LABEL_HEIGHT * 2}
+          fill={'white'}
+          stroke={'grey'}
+          strokeDasharray={'2, 5'}
+        />
       );
     });
   }
@@ -112,7 +136,7 @@ class Demo extends Component {
           y1={y}
           x2={x + Math.cos(theta) * radius}
           y2={y + Math.sin(theta) * radius}
-          stroke={'grey'}
+          stroke={'green'}
           strokeDasharray={`1, ${RAY_STEP_SIZE - 1}`}
         />
       );
@@ -129,6 +153,7 @@ class Demo extends Component {
       <div>
         <svg width={width} height={height}>
           {this.renderRays()}
+          {this.renderMasks()}
           {this.renderPoints()}
         </svg>
       </div>
