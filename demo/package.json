@@ -1,0 +1,17 @@
+{
+  "name": "label-placement-demo",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "start": "webpack-dev-server --progress --hot --open"
+  },
+  "dependencies": {
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1"
+  },
+  "devDependencies": {
+    "buble-loader": "^0.4.1",
+    "webpack": "^3.0.0",
+    "webpack-dev-server": "^2.5.0"
+  }
+}

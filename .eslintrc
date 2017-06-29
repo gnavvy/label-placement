@@ -1,0 +1,21 @@
+{
+  "parser": "babel-eslint",
+  "extends": [
+    "eslint-config-uber-es2015",
+    "eslint-config-uber-jsx"
+  ],
+  "rules": {
+    "complexity": 0,
+    "func-style": 0,
+    "max-len": 0,
+    "prefer-const": 1,
+    "indent": [
+      2,
+      2,
+      {
+        "SwitchCase": 1
+      }
+    ],
+    "operator-linebreak": 1
+  }
+}
