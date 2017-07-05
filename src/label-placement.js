@@ -13,7 +13,7 @@ const DEFAULT_POINT_HEIGHT = 15;
 const DEFAULT_NUM_RAYS = 64;
 const DEFAULT_STEP_SIZE = 5;
 
-class LabelPlacement {
+export default class LabelPlacement {
   constructor(
     points,
     {
@@ -164,5 +164,3 @@ class LabelPlacement {
     };
   }
 }
-
-export default LabelPlacement;

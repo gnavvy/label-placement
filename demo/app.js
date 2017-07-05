@@ -4,12 +4,11 @@ import React, {Component} from 'react';
 import {render} from 'react-dom';
 
 import {
+  LabelPlacement,
   getRandomPoints,
   getIndices,
   convertRayIndexToTheta
-} from '../src/utils.js';
-
-import LabelPlacement from '../src/label-placement';
+} from '../src';
 
 const NUM_POINTS = 64;
 const NUM_RAYS = 64;
