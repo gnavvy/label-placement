@@ -1,6 +1,6 @@
 {
   "name": "label-placement",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A util to place labels in scatterplot without overlapping",
   "main": "dist/index.js",
   "scripts": {
@@ -12,12 +12,18 @@
     "test": "npm run lint && npm run test:mocha",
     "test:mocha": "mocha --compiler --require babel-register js:babel-core **/*.spec.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gnavvy/label-placement.git.git"
   },
-  "keywords": ["label", "tooltip", "scatterplot"],
+  "keywords": [
+    "label",
+    "tooltip",
+    "scatterplot"
+  ],
   "author": "Yang Wang (gnavvy@gmail.com)",
   "license": "MIT",
   "bugs": {
