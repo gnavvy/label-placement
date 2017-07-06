@@ -1,6 +1,6 @@
 {
   "name": "label-placement",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A util to place labels in scatterplot without overlapping",
   "main": "dist/index.js",
   "scripts": {
