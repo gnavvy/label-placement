@@ -1,2 +1,6 @@
-export {default as LabelPlacement} from './label-placement';
+import LabelPlacement from './label-placement';
+export {
+  LabelPlacement
+};
+
 export * from './utils';
