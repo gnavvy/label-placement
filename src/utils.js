@@ -30,12 +30,7 @@ export function getBoundingBox({x, y}, width, height) {
   ];
 }
 
-export function getLineIntersect(
-  {x: x1, y: y1},
-  {x: x2, y: y2},
-  {x: x3, y: y3},
-  {x: x4, y: y4}
-) {
+export function getLineIntersect({x: x1, y: y1}, {x: x2, y: y2}, {x: x3, y: y3}, {x: x4, y: y4}) {
   const denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
   if (denominator === 0) {
     return null;
@@ -56,12 +51,28 @@ export function getLineSegmentIntersect(p1, p2, p3, p4) {
     return null;
   }
 
-  const {
-    x = null,
-    y = null,
-    betweenP1P2 = null,
-    betweenP3P4 = null
-  } = intersect;
+  const {x = null, y = null, betweenP1P2 = null, betweenP3P4 = null} = intersect;
 
   return betweenP1P2 && betweenP3P4 ? {x, y} : null;
+}
+
+// p: query point, q: ray end point, [a, b, c, d]: four corners of bbox
+export function getPointBoundingBoxIntersectRange([p, q], [a, b, c, d]) {
+  return (
+    [
+      [{x: a.x, y: a.y}, {x: b.x, y: b.y}],
+      [{x: a.x, y: a.y}, {x: c.x, y: c.y}],
+      [{x: b.x, y: b.y}, {x: d.x, y: d.y}],
+      [{x: c.x, y: c.y}, {x: d.x, y: d.y}]
+    ]
+      // get intersection between the ray segment and each side segment
+      .map(([p1, p2]) => getLineSegmentIntersect(p1, p2, p, q))
+      // get rid of non-intersect ones
+      .filter(Boolean)
+      // get the distance instead of x, y
+      .map(({x, y}) => {
+        const {x: px, y: py} = p;
+        return Math.sqrt((px - x) * (px - x) + (py - y) * (py - y));
+      })
+  );
 }

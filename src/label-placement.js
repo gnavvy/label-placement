@@ -2,8 +2,8 @@ import {
   getIndices,
   convertRayIndexToTheta,
   getBoundingBox,
-  getLineSegmentIntersect,
-  sampleCandidates
+  sampleCandidates,
+  getPointBoundingBoxIntersectRange
 } from './utils';
 
 const DEFAULT_LABEL_WIDTH = 100;
@@ -12,6 +12,7 @@ const DEFAULT_POINT_WIDTH = 15;
 const DEFAULT_POINT_HEIGHT = 15;
 const DEFAULT_NUM_RAYS = 64;
 const DEFAULT_STEP_SIZE = 5;
+const DEFAULT_PADDING = [0, 0, 0, 0];
 
 export default class LabelPlacement {
   constructor(
@@ -25,7 +26,8 @@ export default class LabelPlacement {
       labelHeight = DEFAULT_LABEL_HEIGTH,
 
       numRays = DEFAULT_NUM_RAYS,
-      stepSize = DEFAULT_STEP_SIZE
+      stepSize = DEFAULT_STEP_SIZE,
+      padding = DEFAULT_PADDING
     }
   ) {
     this.points = points;
@@ -36,15 +38,14 @@ export default class LabelPlacement {
 
     this.pointWidth = pointWidth;
     this.pointHeight = pointHeight;
-    this.pointRadius = Math.sqrt(
-      pointWidth * pointWidth + pointHeight * pointHeight
-    );
+    this.pointRadius = Math.sqrt(pointWidth * pointWidth + pointHeight * pointHeight);
 
     this.labelWidth = labelWidth;
     this.labelHeight = labelHeight;
 
     this.numRays = numRays;
     this.stepSize = stepSize;
+    this.padding = padding;
   }
 
   updateCanvasSize({width, height}) {
@@ -75,56 +76,58 @@ export default class LabelPlacement {
 
   _getFilteredCandidateMap(queryPoint) {
     const rayCandidateMap = this._getRayCandidateMap();
-    // console.log(rayCandidateMap);
     const {labelWidth, labelHeight, pointRadius, rayLength, numRays} = this;
 
-    this.points.forEach(point => {
-      // a ----------- c
-      // |    -----    |
-      // |    | x |    |
-      // |    -----    |
-      // b ----------- d
-      const [a, b, c, d] = getBoundingBox(
-        point,
-        labelWidth + pointRadius * 2,
-        labelHeight + pointRadius * 2
-      );
+    const {canvasWidth, canvasHeight, padding: [top, right, bottom, left]} = this;
+    // / --- canvasWidth --- \
+    // |  p---------------q  |
+    // |  |       o       |  | canvasHeight
+    // |  r---------------s  |
+    // \ ------------------- /
+    const [p, q, r, s] = [
+      {x: left, y: top},
+      {x: canvasWidth - right, y: top},
+      {x: left, y: canvasHeight - bottom},
+      {x: canvasWidth - right, y: canvasHeight - bottom}
+    ];
 
-      const sideLineSegments = [
-        [{x: a.x, y: a.y}, {x: b.x, y: b.y}],
-        [{x: a.x, y: a.y}, {x: c.x, y: c.y}],
-        [{x: b.x, y: b.y}, {x: d.x, y: d.y}],
-        [{x: c.x, y: c.y}, {x: d.x, y: d.y}]
-      ];
+    Object.keys(rayCandidateMap).forEach(rayIndex => {
+      // convert ray index to ray theta
+      const theta = convertRayIndexToTheta(rayIndex, numRays);
+      // create a fake end point for the ray, for interact calculation
+      const rayEndPoint = {
+        x: queryPoint.x + Math.cos(theta) * rayLength,
+        y: queryPoint.y + Math.sin(theta) * rayLength
+      };
+      const rangeMax = getPointBoundingBoxIntersectRange(
+        [queryPoint, rayEndPoint],
+        [p, q, r, s]
+      ).sort((d1, d2) => d2 - d1)[0];
 
-      Object.keys(rayCandidateMap).forEach(i => {
-        // convert ray index to ray theta
-        const theta = convertRayIndexToTheta(i, numRays);
-        // create a fake end point for the ray, for interact calculation
-        const rayEndPoint = {
-          x: queryPoint.x + Math.cos(theta) * rayLength,
-          y: queryPoint.y + Math.sin(theta) * rayLength
-        };
+      rayCandidateMap[rayIndex].push([rangeMax, Infinity]);
 
-        const range = sideLineSegments
-          // get intersection between the ray segment and each side segment
-          .map(([p1, p2]) =>
-            getLineSegmentIntersect(p1, p2, queryPoint, rayEndPoint)
-          )
-          // get rid of non-intersect ones
-          .filter(Boolean)
-          // get the distance instead of x, y
-          .map(({x, y}) => {
-            const {x: qx, y: qy} = queryPoint;
-            return Math.sqrt((qx - x) * (qx - x) + (qy - y) * (qy - y));
-          })
-          .sort((p, q) => p - q);
+      this.points.forEach(point => {
+        // a ----------- c
+        // |    -----    |
+        // |    | x |    |
+        // |    -----    |
+        // b ----------- d
+        const [a, b, c, d] = getBoundingBox(
+          point,
+          labelWidth + pointRadius * 2,
+          labelHeight + pointRadius * 2
+        );
+
+        const range = getPointBoundingBoxIntersectRange(
+          [queryPoint, rayEndPoint],
+          [a, b, c, d]
+        ).sort((d1, d2) => d1 - d2);
 
         if (range.length > 0) {
           if (range.length === 1) {
             range.unshift(0);
           }
-          rayCandidateMap[i].push(range);
+          rayCandidateMap[rayIndex].push(range);
         }
       });
     });
@@ -147,9 +150,7 @@ export default class LabelPlacement {
     const minRadius = candidates.find(d => {
       const placeableRays = Object.keys(rayCandidateMap).filter(rayIndex => {
         // check if d is beyond all (overlapping) ranges
-        return rayCandidateMap[rayIndex].every(
-          range => d < range[0] || range[1] < d
-        );
+        return rayCandidateMap[rayIndex].every(range => d < range[0] || range[1] < d);
       });
       if (placeableRays.length > 0) {
         theta = convertRayIndexToTheta(placeableRays[0], numRays);
