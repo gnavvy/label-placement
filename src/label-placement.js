@@ -12,7 +12,6 @@ const DEFAULT_POINT_WIDTH = 15;
 const DEFAULT_POINT_HEIGHT = 15;
 const DEFAULT_NUM_RAYS = 64;
 const DEFAULT_STEP_SIZE = 5;
-const DEFAULT_PADDING = [0, 0, 0, 0];
 
 export default class LabelPlacement {
   constructor(
@@ -27,7 +26,7 @@ export default class LabelPlacement {
 
       numRays = DEFAULT_NUM_RAYS,
       stepSize = DEFAULT_STEP_SIZE,
-      padding = DEFAULT_PADDING
+      viewport
     }
   ) {
     this.points = points;
@@ -45,7 +44,7 @@ export default class LabelPlacement {
 
     this.numRays = numRays;
     this.stepSize = stepSize;
-    this.padding = padding;
+    this.viewport = viewport || [0, 0, canvasWidth, canvasHeight];
   }
 
   updateCanvasSize({width, height}) {
@@ -78,17 +77,17 @@ export default class LabelPlacement {
     const rayCandidateMap = this._getRayCandidateMap();
     const {labelWidth, labelHeight, pointRadius, rayLength, numRays} = this;
 
-    const {canvasWidth, canvasHeight, padding: [top, right, bottom, left]} = this;
+    const {canvasWidth, canvasHeight, viewport: [x, y, width, height]} = this;
     // / --- canvasWidth --- \
     // |  p---------------q  |
     // |  |       o       |  | canvasHeight
     // |  r---------------s  |
     // \ ------------------- /
     const [p, q, r, s] = [
-      {x: left, y: top},
-      {x: canvasWidth - right, y: top},
-      {x: left, y: canvasHeight - bottom},
-      {x: canvasWidth - right, y: canvasHeight - bottom}
+      {x, y},
+      {x: x + width, y},
+      {x, y: y + height},
+      {x: x + width, y: y + height}
     ];
 
     Object.keys(rayCandidateMap).forEach(rayIndex => {
